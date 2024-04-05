@@ -1,0 +1,24 @@
+#!/bin/bash
+
+nginx_conf="/etc/nginx/nginx.conf"
+if ! grep -q "listen 80;" "$nginx_conf"; then
+    echo "listen 80;" | sudo tee -a "$nginx_conf" >/dev/null
+    echo "Added 'listen 80;' to $nginx_conf"
+fi
+
+if sudo netstat -tuln | grep ":80 "; then
+    echo "Port 80 is already in use."
+    exit 1
+fi
+
+sudo systemctl restart nginx
+
+if sudo ufw status | grep -q "Status: active"; then
+    if ! sudo ufw status | grep -q "80"; then
+        sudo ufw allow 80
+        echo "Port 80 allowed in firewall."
+    fi
+fi
+
+echo "Nginx should now be listening on port 80."
+
